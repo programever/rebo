@@ -1,0 +1,15 @@
+[Unit]
+Description=rebo daily at 03:30 Vietnam time, retries at 04:30 and 06:00
+
+[Timer]
+# The box runs on UTC, so the timezone is named here. The later runs reuse what
+# the first run already made; they only add the sound if it was missing.
+OnCalendar=*-*-* 03:30:00 Asia/Ho_Chi_Minh
+OnCalendar=*-*-* 04:30:00 Asia/Ho_Chi_Minh
+OnCalendar=*-*-* 06:00:00 Asia/Ho_Chi_Minh
+Persistent=true
+AccuracySec=1min
+Unit=rebo.service
+
+[Install]
+WantedBy=timers.target

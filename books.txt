@@ -1,0 +1,3 @@
+# Books to read, in this order, one per line. The name is the last part of the
+# address on langmai.org. When the list is used up, the next book in the library follows.
+an-lac-tung-buoc-chan

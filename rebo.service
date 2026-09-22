@@ -1,0 +1,12 @@
+[Unit]
+Description=rebo — build today's reading with voice and publish it
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/rebo
+Environment=PATH=%h/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=%h/rebo/run.sh
+TimeoutStartSec=45min
+Nice=5
