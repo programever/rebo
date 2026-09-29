@@ -184,14 +184,22 @@ def clean_for_speech(text: str) -> str:
 def spoken_pieces(sections: list[dict]) -> list[str]:
     """One piece per paragraph, with the section title as its own piece first.
     Short pieces fail less often than long ones, and a failed piece is retried
-    alone instead of speaking the whole section again."""
+    alone instead of speaking the whole section again. Pieces with no letters
+    are left out (see speakable)."""
     out: list[str] = []
     for s in sections:
         title = clean_for_speech(s["title"])
-        if title:
+        if speakable(title):
             out.append(title if title.endswith((".", "!", "?")) else title + ".")
         for p in s["paragraphs"]:
             p = clean_for_speech(p)
-            if p:
+            if speakable(p):
                 out.append(p)
     return out
+
+
+def speakable(text: str) -> bool:
+    """A piece with no letter or digit (a lone dash, a dot) makes Microsoft
+    answer "no audio received" every time. That cost the sound of two whole
+    days, 2026-09-28 and 2026-09-29. Such pieces are skipped."""
+    return any(c.isalnum() for c in text)

@@ -153,14 +153,44 @@ def _content_root(soup: BeautifulSoup) -> Tag:
     raise FetchError("no text container found; the site may have changed")
 
 
+# A <br> becomes this character, so a line break the writer meant can be told
+# apart from a plain newline in the page source (which is only white space).
+LINE_BREAK = "\u2028"
+# A heading written as a short bold line in capitals is at most this long.
+HEADING_MAX_CHARS = 120
+
+
+def _has_letters(text: str) -> bool:
+    return any(c.isalnum() for c in text)
+
+
+def _is_heading_paragraph(node: Tag) -> bool:
+    """Some parts mark a section not with a heading tag but with a short bold
+    line in capitals, like <p><strong>DÒNG SÔNG CẢM THỌ</strong></p>. Part II
+    and III of "An lạc từng bước chân" are written that way (found 2026-09-29)."""
+    text = _clean(node.get_text(" ").replace(LINE_BREAK, " "))
+    if not text or len(text) > HEADING_MAX_CHARS or "\n" in text:
+        return False
+    if not _has_letters(text) or text != text.upper():
+        return False
+    bold = " ".join(_clean(b.get_text(" ")) for b in node.find_all(["strong", "b"]))
+    return "".join(bold.split()) == "".join(text.split())
+
+
 def parse_sections(html: str, part_title: str) -> list[Section]:
     """The text of one part page, split into sections by its headings.
 
-    Text before the first heading becomes a section named after the part."""
+    A heading is an h2/h3/h4, or a short bold line in capitals on its own.
+    Text before the first heading becomes a section named after the part.
+    Inside a paragraph, only a <br> starts a new line; bold or italic words
+    stay in their sentence. Lines with no letters (a lone dash or dot) are
+    dropped: they broke the voice on 2026-09-28 and 2026-09-29."""
     soup = BeautifulSoup(html, "html.parser")
     root = _content_root(soup)
     for junk in root.select("script, style, nav, .sharedaddy, .jp-relatedposts, #side-menu, .wp-block-image, figure"):
         junk.decompose()
+    for br in root.find_all("br"):
+        br.replace_with(LINE_BREAK)
 
     sections: list[Section] = []
     current: Section | None = None
@@ -173,23 +203,21 @@ def parse_sections(html: str, part_title: str) -> list[Section]:
 
     def add_text(text: str) -> None:
         nonlocal current
-        text = _clean(text)
-        if not text:
+        pieces = [_clean(piece.replace("\n", " ")) for piece in text.split(LINE_BREAK)]
+        pieces = [piece for piece in pieces if _has_letters(piece)]
+        if not pieces:
             return
         if current is None:
             open_section(part_title)
         assert current is not None
-        for piece in text.split("\n"):
-            piece = piece.strip()
-            if piece:
-                current.paragraphs.append(piece)
+        current.paragraphs.extend(pieces)
 
     for node in root.descendants:
         if not isinstance(node, Tag):
             continue
         name = node.name.lower()
         if name in ("h2", "h3", "h4"):
-            title = _clean(node.get_text(" "))
+            title = _clean(node.get_text(" ").replace(LINE_BREAK, " "))
             if title:
                 open_section(title)
             continue
@@ -198,7 +226,10 @@ def parse_sections(html: str, part_title: str) -> list[Section]:
         if name in ("p", "li", "blockquote"):
             if node.find(["p", "li", "blockquote"]) is not None:
                 continue  # a box that holds smaller pieces; those come next
-            add_text(node.get_text("\n"))
+            if name == "p" and _is_heading_paragraph(node):
+                open_section(_clean(node.get_text(" ").replace(LINE_BREAK, " ")))
+                continue
+            add_text(node.get_text(""))
     if current is not None and current.paragraphs:
         sections.append(current)
     if not sections:

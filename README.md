@@ -14,9 +14,14 @@ The page: https://programever.github.io/rebo/
 
 - A day is a few sections in a row, about 2,000 words or a little more.
   A section is never cut in the middle. That is 12 to 15 minutes of listening.
+- A section starts at a heading. Some parts have no heading tags, only a short
+  bold line in capitals before each piece; that line counts as a heading too.
+  (Parts II and III of "An lạc từng bước chân" are like that. Before
+  2026-09-29 each of them was published as one huge day of 10,000 words.)
 - When a part (chapter) ends, the next part starts the next day.
 - When a book ends, the next book in `books.txt` starts. When that list is used
-  up, the next book in the library follows.
+  up, the rest of the library follows from A to Z by the name in the address
+  (Iker, 2026-09-29). After the last book, the library starts again from A.
 - If a day is missed (box off, site down), nothing is skipped. The next run
   simply continues from the same place.
 - The page shows the last 10 days. Older days stay on this box in `out/days/`
@@ -30,7 +35,9 @@ The page: https://programever.github.io/rebo/
    and move the progress on. A day that was already planned is reused.
 2. **Voice.** Microsoft's free voice (edge-tts, `vi-VN-HoaiMyNeural`). One
    call per paragraph, joined into one mp3 with short pauses. A failed call is
-   tried again, waiting longer each time. If the voice fails completely, the
+   tried again, waiting longer each time. A piece with no letters in it (a
+   lone dash or dot) is never sent: Microsoft answers "no audio" to those,
+   and that cost the sound of two days. If the voice fails completely, the
    day is still published, just without sound.
 3. **Page.** Plain HTML, no JavaScript. The front page shows today in full and
    lists the earlier days. Each day has its own page and its own sound file.

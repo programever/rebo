@@ -62,6 +62,23 @@ check("no empty section titles", all(s.title.strip() for s in sections))
 check("no empty paragraphs", all(p.strip() for s in sections for p in s.paragraphs))
 check("no html left in text", not any("<" in p or "&nbsp;" in p for s in sections for p in s.paragraphs))
 
+# Part II has no heading tags, only short bold lines in capitals (found 2026-09-29)
+sections2 = fetch.parse_sections(read("part2-an-lac.html"), parts[1].title)
+check("part II: bold lines in capitals are headings, 21 sections", len(sections2) == 21, str(len(sections2)))
+check("part II first section title", sections2[0].title == "DÒNG SÔNG CẢM THỌ", sections2[0].title)
+check("a heading split over several bold pieces is one title", any(s.title == "BÀN TAY CỦA BẠN" for s in sections2))
+check("part II about 10,500 words", 10000 < sum(s.words for s in sections2) < 11000, str(sum(s.words for s in sections2)))
+check("no paragraph without letters (a lone dash or dot)",
+      all(any(c.isalnum() for c in p) for s in sections + sections2 for p in s.paragraphs))
+check("bold words stay in their sentence", any(p.startswith("“Em” đây là") for s in sections for p in s.paragraphs))
+check("a short bold line that is not in capitals is not a heading", not any(s.title.startswith("Tĩnh lặng") for s in sections))
+_start, _days = 0, []
+while _start < len(sections2):
+    _end = plan.pick_sections(sections2, _start, 2000)
+    _days.append(sum(s.words for s in sections2[_start:_end]))
+    _start = _end
+check("part II makes about 5 days, none over 3,000 words", 4 <= len(_days) <= 6 and max(_days) < 3000, str(_days))
+
 # ---- grouping into days ----
 check("first day is sections 1-6", plan.pick_sections(sections, 0, 2000) == 6, str(plan.pick_sections(sections, 0, 2000)))
 check("last section alone", plan.pick_sections(sections, 23, 2000) == 24)
@@ -77,6 +94,11 @@ p3 = plan.Progress(book="an-lac-tung-buoc-chan", part=2, section=0)
 nxt = plan.advance(p3, 24, 24, 3, lib)
 check("end of the book: next book in the library", nxt.book == books[1].slug and nxt.part == 0 and nxt.section == 0, str(nxt))
 check("the first book comes from books.txt", plan.next_book_slug(None, lib) == "an-lac-tung-buoc-chan")
+backwards = list(reversed(books))
+check("the library is read from A to Z, whatever order the site shows",
+      plan.next_book_slug("an-lac-tung-buoc-chan", backwards) == "an-tru-trong-hien-tai",
+      plan.next_book_slug("an-lac-tung-buoc-chan", backwards))
+check("A to Z order starts with An lạc từng bước chân", plan.library_order(backwards)[0] == "an-lac-tung-buoc-chan")
 last = plan.next_book_slug(books[-1].slug, lib)
 check("after the last book, the library starts again", last == books[0].slug, last)
 
@@ -120,6 +142,8 @@ check("one piece per title and per paragraph", len(pieces) == 2 + len(sections[0
 check("no ellipsis character goes to the voice", not any("\u2026" in x for x in pieces))
 check("cleaning keeps the words", voice.clean_for_speech("a\u2026 b\xa0c\n d") == "a... b c d")
 check("first piece is the title", pieces[0] == sections[0].title + ".")
+check("a piece with no letters is not spoken",
+      voice.spoken_pieces([{"title": "–", "paragraphs": ["–", "Xin chào", "."]}]) == ["Xin chào"])
 check("fingerprint changes with the words", voice.fingerprint(pieces) != voice.fingerprint(pieces[:1]))
 
 # ---- undo ----

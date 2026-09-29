@@ -5,8 +5,8 @@ Progress is one small file, out/progress.json:
 
 A day's reading is a few sections in a row, about WORDS_PER_DAY words. A section
 is never cut. When a part ends, the next part starts the next day. When a book
-ends, the next book in books.txt starts; when books.txt is used up, the next
-book in the library after the current one.
+ends, the next book in books.txt starts; when books.txt is used up, the rest
+of the library follows from A to Z.
 """
 from __future__ import annotations
 
@@ -56,20 +56,26 @@ def wanted_books(path: Path = BOOKS_FILE) -> list[str]:
     return out
 
 
+def library_order(library: list[fetch.Book]) -> list[str]:
+    """All books from A to Z by their name in the address (Iker, 2026-09-29).
+    The order the site shows is not trusted; it could change."""
+    return sorted(b.slug for b in library)
+
+
 def next_book_slug(current: str | None, library: list[fetch.Book]) -> str:
-    """The book to read after `current` (or the first one when current is None)."""
+    """The book to read after `current` (or the first one when current is None).
+    First the books in books.txt, in that order. Then the rest of the library
+    from A to Z; after the last one, the library starts again from A."""
     wanted = wanted_books()
     known = {b.slug for b in library}
     wanted = [w for w in wanted if w in known]
+    order = library_order(library)
     if current is None:
-        if wanted:
-            return wanted[0]
-        return library[0].slug
+        return wanted[0] if wanted else order[0]
     if current in wanted:
         i = wanted.index(current)
         if i + 1 < len(wanted):
             return wanted[i + 1]
-    order = [b.slug for b in library]
     if current in order:
         i = order.index(current)
         return order[(i + 1) % len(order)]
