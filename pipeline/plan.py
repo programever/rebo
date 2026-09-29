@@ -33,13 +33,18 @@ class Progress:
     section: int
 
     @staticmethod
-    def load(path: Path = PROGRESS_FILE) -> "Progress | None":
+    def load(path: Path | None = None) -> "Progress | None":
+        # The file is looked up when called, not when this module loads, so the
+        # tests can point it at a scratch folder. Before 2026-09-29 the tests
+        # overwrote the real progress file, and a run then repeated old days.
+        path = path or PROGRESS_FILE
         if not path.is_file():
             return None
         raw = json.loads(path.read_text(encoding="utf-8"))
         return Progress(book=str(raw["book"]), part=int(raw["part"]), section=int(raw["section"]))
 
-    def save(self, path: Path = PROGRESS_FILE) -> None:
+    def save(self, path: Path | None = None) -> None:
+        path = path or PROGRESS_FILE
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(asdict(self), ensure_ascii=False, indent=1), encoding="utf-8")
 

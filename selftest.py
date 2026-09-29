@@ -20,6 +20,13 @@ os.environ["DOCSACH_OUT"] = str(SCRATCH)
 
 from pipeline import config, fetch, plan, site, voice  # noqa: E402
 
+# The real progress file must never be touched by the tests. On 2026-09-29 it
+# was, and the next run repeated Part I instead of going on with Part II.
+REAL_PROGRESS = config.PROGRESS_FILE
+REAL_PROGRESS_BEFORE = REAL_PROGRESS.read_bytes() if REAL_PROGRESS.is_file() else None
+REAL_DAYS_DIR = config.DAYS_DIR
+REAL_DAYS_BEFORE = sorted(x.name for x in REAL_DAYS_DIR.iterdir()) if REAL_DAYS_DIR.is_dir() else None
+
 config.OUT_DIR = SCRATCH
 config.DAYS_DIR = SCRATCH / "days"
 config.CACHE_DIR = SCRATCH / "cache"
@@ -151,6 +158,11 @@ plan.Progress(**r.progress_after).save()
 plan.undo_day(date(2026, 9, 22))
 check("undo puts progress back", plan.Progress.load() == plan.Progress(**r.progress_before))
 check("undo removes the day's files", not (config.DAYS_DIR / "2026-09-22" / "reading.json").exists())
+
+real_after = REAL_PROGRESS.read_bytes() if REAL_PROGRESS.is_file() else None
+check("the real progress file was not touched", real_after == REAL_PROGRESS_BEFORE)
+days_after = sorted(x.name for x in REAL_DAYS_DIR.iterdir()) if REAL_DAYS_DIR.is_dir() else None
+check("the real days folder was not touched", days_after == REAL_DAYS_BEFORE)
 
 print(f"\n{fails} failed" if fails else "\nall tests passed")
 sys.exit(1 if fails else 0)
