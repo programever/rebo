@@ -57,6 +57,7 @@ wish for these small projects).
 | `pipeline/plan.py` | Decides today's reading and moves the progress on. |
 | `pipeline/voice.py` | Makes the sound with edge-tts and ffmpeg. |
 | `pipeline/site.py` | Writes the HTML pages. |
+| `assets/` | The favicon, the small picture the browser shows next to the page name. Copied next to the pages on every build. |
 | `pipeline/publish.py` | Force-pushes the page branch, with guards. |
 | `pipeline/main.py` | One run, all steps. |
 | `books.txt` | The books to read, in order. |

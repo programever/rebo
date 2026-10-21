@@ -102,10 +102,21 @@ def _footer() -> str:
             f'Giọng đọc là giọng máy (Microsoft). Trang này chỉ giữ 10 ngày gần nhất.</footer>')
 
 
+# The small picture the browser shows next to the page name (the favicon).
+# Both files live in assets/ and are copied next to index.html on every build.
+ICON_FILES = ("icon.svg", "icon-180.png")
+ASSETS_DIR = Path(__file__).resolve().parent.parent / "assets"
+
+
 def _page(title: str, body: str, css_href: str) -> str:
+    # The icons sit next to style.css, so they use the same path prefix.
+    prefix = css_href[: -len("style.css")]
     return (f'<!doctype html><html lang="vi"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width, initial-scale=1">'
-            f'<title>{_e(title)}</title><link rel="stylesheet" href="{css_href}"></head>'
+            f'<title>{_e(title)}</title><link rel="stylesheet" href="{css_href}">'
+            f'<link rel="icon" href="{prefix}icon.svg" type="image/svg+xml">'
+            f'<link rel="icon" href="{prefix}icon-180.png" type="image/png" sizes="180x180">'
+            f'<link rel="apple-touch-icon" href="{prefix}icon-180.png"></head>'
             f'<body><main>{body}</main></body></html>')
 
 
@@ -116,6 +127,8 @@ def build_site(cfg: Config, folder: Path) -> list[date]:
         raise RuntimeError("nothing to publish: no day has a reading yet")
     (folder / "style.css").write_text(CSS.strip() + "\n", encoding="utf-8")
     (folder / ".nojekyll").write_text("", encoding="utf-8")
+    for name in ICON_FILES:
+        shutil.copy2(ASSETS_DIR / name, folder / name)
 
     entries: list[tuple[date, Reading, str | None, int]] = []
     for day in days:
