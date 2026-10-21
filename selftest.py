@@ -146,6 +146,10 @@ check("the front page has a favicon (the small picture next to the page name)",
       'rel="icon" href="icon.svg"' in index and 'rel="apple-touch-icon" href="icon-180.png"' in index)
 check("a day page points at the same favicon one folder up",
       'rel="icon" href="../../icon.svg"' in old)
+check("the pages load the script that marks \"read\" in Haba, and it is copied next to the page",
+      '<script type="module" src="haba-read.js"></script>' in index
+      and '<script type="module" src="../../haba-read.js"></script>' in old
+      and "runQuery" in (out / "haba-read.js").read_text())
 check("the favicon files are copied next to the page",
       (out / "icon.svg").is_file() and (out / "icon-180.png").stat().st_size > 1000)
 

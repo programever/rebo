@@ -48,6 +48,15 @@ The page: https://programever.github.io/rebo/
 The `main` branch holds the code and is kept as one squashed commit (Iker's
 wish for these small projects).
 
+## Haba mark
+
+The page marks Read in Iker's habit page Haba after 3 minutes on it (Iker,
+2026-10-21). The time counts while the page is on the screen, and also while
+the sound plays, even with the phone locked. It marks at most once per day.
+DeViDa does the same, so a day with both still gives one mark. The script is
+`assets/haba-read.js`. It is a copy, made in the Haba repo
+(`haba/shared/README.md` says how). Do not edit it here.
+
 ## Files
 
 | File | What it is |
